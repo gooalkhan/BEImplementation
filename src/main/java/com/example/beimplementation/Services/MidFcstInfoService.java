@@ -1,10 +1,12 @@
 package com.example.beimplementation.Services;
 
-import com.example.beimplementation.Entities.MidFcst;
-import com.example.beimplementation.Repositories.MidFcstRepository;
+import com.example.beimplementation.Entities.MidLandFcst;
+import com.example.beimplementation.Exceptions.BadQueryException;
+import com.example.beimplementation.Exceptions.MultipleEntryException;
+import com.example.beimplementation.Repositories.MidLandFcstRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.json.JSONArray;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -17,6 +19,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import org.json.JSONObject;
+import org.springframework.web.client.HttpClientErrorException;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -25,42 +28,82 @@ public class MidFcstInfoService {
 
     private final String endPoint = "http://apis.data.go.kr/1360000/MidFcstInfoService";
 
-    private final MidFcstRepository midFcstRepository;
+    private final MidLandFcstRepository midLandFcstRepository;
 
-    public MidFcst getMidFcst(String serviceKey, int numOfRows, int pageNo, String dataType, int stnId, String tmFc) throws Exception {
-        MidFcst midFcst = null;
+    public MidLandFcst getMidLandFcst(String serviceKey, int numOfRows, int pageNo, String regId, String tmFc) throws Exception {
+        MidLandFcst midLandFcst = null;
 
-        List<MidFcst> listOfMidFcst =  midFcstRepository.findAllByNumOfRowsAndPageNoAndDataTypeAndStnIdAndTmFc(numOfRows, pageNo, dataType,  stnId, tmFc);
+        List<MidLandFcst> listOfMidLandFcst = midLandFcstRepository.findAllByRegIdAndTmFc(regId, tmFc);
 
-        if (listOfMidFcst.size() > 1) {
-            //TODO null return이 아니라 커스텀 예외를 던지게 하기
-
-        } else if (listOfMidFcst.size() == 1) {
-            midFcst = listOfMidFcst.get(0);
+        if (listOfMidLandFcst.size() > 1) {
+            log.error("multiple entries found");
+            throw new MultipleEntryException(listOfMidLandFcst.size());
+        } else if (listOfMidLandFcst.size() == 1) {
+            midLandFcst = listOfMidLandFcst.get(0);
         } else {
-            midFcst = getMidFcstFromAPI(serviceKey, numOfRows, pageNo, stnId, tmFc);
+            log.debug("cannot find entries");
+            String fullEndPoint = endPoint +
+                    "/getMidLandFcst" +
+                    "?" + "ServiceKey=" + serviceKey +
+                    "&" + "numOfRows=" + numOfRows +
+                    "&" + "pageNo=" + pageNo +
+                    "&" + "dataType=" + "JSON" +
+                    "&" + "regId=" + regId +
+                    "&" + "tmFc=" + tmFc;
 
-            if (midFcst != null) {
-                midFcstRepository.save(midFcst);
+            JSONObject jsonObject = getFromAPI(fullEndPoint).getJSONObject("response");
+
+            JSONObject header = jsonObject.getJSONObject("header");
+
+            if (!header.getString("resultMsg").equals("NORMAL_SERVICE")) {
+                throw new BadQueryException(header.getString("resultCode"), header.getString("resultMsg"));
             }
+            JSONObject body = jsonObject.getJSONObject("body");
+            JSONObject item = body.getJSONObject("items").getJSONArray("item").getJSONObject(0);
+
+            midLandFcst = new MidLandFcst();
+            midLandFcst.setRegId(item.getString("regId"));
+            midLandFcst.setTmFc(tmFc);
+
+            midLandFcst.setRnSt3Am(item.getInt("rnSt3Am"));
+            midLandFcst.setRnSt3Pm(item.getInt("rnSt3Pm"));
+            midLandFcst.setRnSt4Am(item.getInt("rnSt4Am"));
+            midLandFcst.setRnSt4Pm(item.getInt("rnSt4Pm"));
+            midLandFcst.setRnSt5Am(item.getInt("rnSt5Am"));
+            midLandFcst.setRnSt5Pm(item.getInt("rnSt5Pm"));
+            midLandFcst.setRnSt6Am(item.getInt("rnSt6Am"));
+            midLandFcst.setRnSt6Pm(item.getInt("rnSt6Pm"));
+            midLandFcst.setRnSt7Am(item.getInt("rnSt7Am"));
+            midLandFcst.setRnSt7Pm(item.getInt("rnSt7Pm"));
+
+            midLandFcst.setRnSt8(item.getInt("rnSt8"));
+            midLandFcst.setRnSt9(item.getInt("rnSt9"));
+            midLandFcst.setRnSt10(item.getInt("rnSt10"));
+
+            midLandFcst.setWf3Am(item.getString("wf3Am"));
+            midLandFcst.setWf3Pm(item.getString("wf3Pm"));
+            midLandFcst.setWf4Am(item.getString("wf4Am"));
+            midLandFcst.setWf4Pm(item.getString("wf4Pm"));
+            midLandFcst.setWf5Am(item.getString("wf5Am"));
+            midLandFcst.setWf5Pm(item.getString("wf5Pm"));
+            midLandFcst.setWf6Am(item.getString("wf6Am"));
+            midLandFcst.setWf6Pm(item.getString("wf6Pm"));
+            midLandFcst.setWf7Am(item.getString("wf7Am"));
+            midLandFcst.setWf7Pm(item.getString("wf7Pm"));
+
+            midLandFcst.setWf8(item.getString("wf8"));
+            midLandFcst.setWf9(item.getString("wf9"));
+            midLandFcst.setWf10(item.getString("wf10"));
+
+            midLandFcst.setTimestamp(LocalDateTime.now());
+
+            midLandFcstRepository.save(midLandFcst);
         }
 
-        return midFcst;
+        return midLandFcst;
     }
 
-    public MidFcst getMidFcstFromAPI(String serviceKey, int numOfRows, int pageNo, int stnId, String tmFc) throws Exception {
-        MidFcst midFcst = null;
-
-        String fullEndPoint = endPoint +
-                "/getMidFcst" +
-                "?" + "ServiceKey=" + serviceKey +
-                "&" + "numOfRows=" + numOfRows +
-                "&" + "pageNo=" + pageNo +
-                "&" + "dataType=" + "JSON" +
-                "&" + "stnId=" + stnId +
-//                "&" + "tmFc=" + tmFc.format(DateTimeFormatter.ofPattern("yyyyMMddHHmm"));
-                "&" + "tmFc=" + tmFc;
-
+    private JSONObject getFromAPI(String fullEndPoint) throws Exception {
         URL url = new URL(fullEndPoint);
 
         log.debug("trying to connect - {}", fullEndPoint);
@@ -74,46 +117,24 @@ public class MidFcstInfoService {
 
             if (conn.getResponseCode() != 200) {
                 log.error("getMidFcst job failed, status code: {}", conn.getResponseCode());
-                return midFcst;
+                throw new HttpClientErrorException(HttpStatus.valueOf(conn.getResponseCode()));
 
             } else {
                 log.debug("getMidFcst connection successful, status code: {}", conn.getResponseCode());
                 BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream(), StandardCharsets.UTF_8));
                 StringBuilder sb = new StringBuilder();
 
-                while(br.ready()) {
+                while (br.ready()) {
                     sb.append(br.readLine());
                 }
 
                 String responseString = sb.toString();
                 log.debug(responseString);
 
-                JSONObject jsonObject = new JSONObject(responseString).getJSONObject("response");
-                JSONObject header = jsonObject.getJSONObject("header");
-                JSONObject body = jsonObject.getJSONObject("body");
-                JSONArray items = body.getJSONObject("items").getJSONArray("item");
-
-                if (!header.getString("resultMsg").equals("NORMAL_SERVICE")) {
-                    return midFcst;
-                }
-
-                midFcst = new MidFcst();
-
-                midFcst.setNumOfRows(body.getInt("numOfRows"));
-                midFcst.setPageNo(body.getInt("pageNo"));
-                midFcst.setTotalCount(body.getInt("totalCount"));
-                midFcst.setResultCode(header.getInt("resultCode"));
-                midFcst.setResultMsg(header.getString("resultMsg"));
-                midFcst.setDataType(body.getString("dataType"));
-                midFcst.setTmFc(tmFc);
-                midFcst.setStnId(stnId);
-                midFcst.setWfSv(items.getJSONObject(0).getString("wfSv"));
-                midFcst.setTimeStamp(LocalDateTime.now());
+                return new JSONObject(responseString);
             }
-
-        };
-        return midFcst;
-    };
+        }
+    }
 
     public String getLatestUpdateTime() {
         LocalDateTime result;
