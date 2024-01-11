@@ -26,9 +26,10 @@ import org.springframework.web.client.HttpClientErrorException;
 @Service
 public class MidFcstInfoService {
 
-    private final String endPoint = "http://apis.data.go.kr/1360000/MidFcstInfoService";
+    private final String endPoint = "https://apis.data.go.kr/1360000/MidFcstInfoService";
 
     private final MidLandFcstRepository midLandFcstRepository;
+    private final HttpRequestService httpRequestService;
 
     public MidLandFcst getMidLandFcst(String serviceKey, int numOfRows, int pageNo, String regId, String tmFc) throws Exception {
         MidLandFcst midLandFcst = null;
@@ -51,7 +52,7 @@ public class MidFcstInfoService {
                     "&" + "regId=" + regId +
                     "&" + "tmFc=" + tmFc;
 
-            JSONObject jsonObject = getFromAPI(fullEndPoint).getJSONObject("response");
+            JSONObject jsonObject = httpRequestService.getFromAPI(fullEndPoint).getJSONObject("response");
 
             JSONObject header = jsonObject.getJSONObject("header");
 
@@ -101,39 +102,6 @@ public class MidFcstInfoService {
         }
 
         return midLandFcst;
-    }
-
-    private JSONObject getFromAPI(String fullEndPoint) throws Exception {
-        URL url = new URL(fullEndPoint);
-
-        log.debug("trying to connect - {}", fullEndPoint);
-        final HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-
-        try (AutoCloseable a = conn::disconnect) {
-
-            conn.setRequestMethod("GET");
-            conn.setRequestProperty("Content-type", "application/json");
-            conn.setDoOutput(true);
-
-            if (conn.getResponseCode() != 200) {
-                log.error("getMidFcst job failed, status code: {}", conn.getResponseCode());
-                throw new HttpClientErrorException(HttpStatus.valueOf(conn.getResponseCode()));
-
-            } else {
-                log.debug("getMidFcst connection successful, status code: {}", conn.getResponseCode());
-                BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream(), StandardCharsets.UTF_8));
-                StringBuilder sb = new StringBuilder();
-
-                while (br.ready()) {
-                    sb.append(br.readLine());
-                }
-
-                String responseString = sb.toString();
-                log.debug(responseString);
-
-                return new JSONObject(responseString);
-            }
-        }
     }
 
     public String getLatestUpdateTime() {
