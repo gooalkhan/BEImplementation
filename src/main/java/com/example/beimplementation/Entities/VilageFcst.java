@@ -5,13 +5,12 @@ import lombok.Data;
 import javax.persistence.*;
 import java.time.LocalDateTime;
 
-@Entity
 @Data
+@Entity
 @Table(uniqueConstraints={
         @UniqueConstraint(columnNames = {"baseDate", "baseTime", "nx", "ny", "category", "fcstDate", "fcstTime"})
 })
-public class UltraSrtFcst {
-
+public class VilageFcst {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;

@@ -6,20 +6,13 @@ import com.example.beimplementation.Exceptions.MultipleEntryException;
 import com.example.beimplementation.Repositories.MidLandFcstRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import org.json.JSONObject;
-import org.springframework.web.client.HttpClientErrorException;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -52,7 +45,7 @@ public class MidFcstInfoService {
                     "&" + "regId=" + regId +
                     "&" + "tmFc=" + tmFc;
 
-            JSONObject jsonObject = httpRequestService.getFromAPI(fullEndPoint).getJSONObject("response");
+            JSONObject jsonObject = httpRequestService.getFromAPI(fullEndPoint);
 
             JSONObject header = jsonObject.getJSONObject("header");
 

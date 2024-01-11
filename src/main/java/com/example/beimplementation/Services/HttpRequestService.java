@@ -44,7 +44,7 @@ public class HttpRequestService {
                 String responseString = sb.toString();
                 log.debug(responseString);
 
-                return new JSONObject(responseString);
+                return new JSONObject(responseString).getJSONObject("response");
             }
         }
     }

@@ -1,9 +1,8 @@
 package com.example.beimplementation.Controllers;
 
-import com.example.beimplementation.Entities.MidLandFcst;
+import com.example.beimplementation.Entities.VilageFcst;
 import com.example.beimplementation.Exceptions.BadQueryException;
-import com.example.beimplementation.Exceptions.MultipleEntryException;
-import com.example.beimplementation.Services.MidFcstInfoService;
+import com.example.beimplementation.Services.VilageFcstService;
 import com.example.beimplementation.Utils.ResponseJsonBuilder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -15,63 +14,71 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.HttpClientErrorException;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
+
 @Slf4j
 @RequiredArgsConstructor
-@RequestMapping("/midfcst")
+@RequestMapping("/VilageFcst")
 @RestController
-public class MidFcstInfoController {
+public class VilageFcstInfoController {
 
     @Value("${openapi.midfcst.key}")
     private String apikey;
 
-    private final MidFcstInfoService midFcstInfoService;
+    private final VilageFcstService vilageFcstService;
 
-    @GetMapping(value = "/getMidLandFcst", produces = "application/json")
-    public String getMidLandFcst(
-            @RequestParam(value = "numOfRows", defaultValue = "1") String numOfRows,
-            @RequestParam(value = "pageNo", defaultValue = "1") String pageNo,
-            @RequestParam(value = "regId") String regId,
-            @RequestParam(value = "tmFc", defaultValue = "") String tmFc
+    @GetMapping(value = "/getVilageFcst", produces = "application/json")
+    public String getVilageFcst(@RequestParam(value = "numOfRows", defaultValue = "10") int numOfRows,
+                                  @RequestParam(value = "pageNo", defaultValue = "1") int pageNo,
+                                  @RequestParam(value = "baseDate", defaultValue = "999999") int baseDate,
+                                  @RequestParam(value = "baseTime", defaultValue = "") String baseTime,
+                                  @RequestParam(value = "nx", defaultValue = "0") int nx,
+                                  @RequestParam(value = "ny", defaultValue = "0") int ny
     ) {
         ResponseJsonBuilder jsonBuilder = new ResponseJsonBuilder();
         String response;
 
-        if (regId.isEmpty()) {
+        if (nx == 0 || ny == 0) {
             jsonBuilder.setHeader("97", "NO_PARAMETER");
             jsonBuilder.setBody(0, 0);
             return jsonBuilder.build().toString();
         } else {
-
-            if (tmFc.isEmpty()) tmFc = midFcstInfoService.getLatestUpdateTime();
+            if (baseDate == 999999 || baseTime.isEmpty()) {
+                LocalDateTime latestTime = vilageFcstService.getLatestTime();
+                baseDate = Integer.parseInt(latestTime.format(DateTimeFormatter.ofPattern("yyyyMMdd")));
+                baseTime = latestTime.format(DateTimeFormatter.ofPattern("HHmm"));
+            }
 
             try {
-                MidLandFcst midLandFcst = midFcstInfoService.getMidLandFcst(apikey, Integer.parseInt(numOfRows), Integer.parseInt(pageNo), regId, tmFc);
+                List<VilageFcst> listOfVilageFcst = vilageFcstService.getVilageFcst(
+                        apikey, numOfRows, pageNo, baseDate, baseTime, nx, ny);
                 jsonBuilder.setHeader("00", "NORMAL_SERVICE");
-                jsonBuilder.setBody(1, 1);
-                jsonBuilder.appendItem(new JSONObject(midLandFcst));
+                jsonBuilder.setBody(listOfVilageFcst.size(), vilageFcstService.getCountByConditions(baseDate, baseTime, nx, ny));
+                for (VilageFcst item:listOfVilageFcst) {
+                    jsonBuilder.appendItem(new JSONObject(item));
+                }
 
             } catch (BadQueryException bqe) {
                 log.error("bad query");
                 jsonBuilder.setHeader(bqe.getResultCode(), bqe.getResultMsg());
                 jsonBuilder.setBody(0, 0);
 
-            } catch (MultipleEntryException me) {
-                log.error("found multiple entries");
-                jsonBuilder.setHeader("98", "SERVER_ERROR");
-                jsonBuilder.setBody(0, 0);
-
             } catch (HttpClientErrorException hee) {
                 log.error("cannot connect to origin - {}", hee.getStatusCode());
                 jsonBuilder.setHeader("99", "CONNECTION_ERROR");
                 jsonBuilder.setBody(0, 0);
+
             } catch (Exception e) {
                 log.error(e.getMessage());
                 jsonBuilder.setHeader("98", "SERVER_ERROR");
                 jsonBuilder.setBody(0, 0);
+
             } finally {
                 response = jsonBuilder.build().toString();
             }
-            return response;
         }
+        return response;
     }
 }
