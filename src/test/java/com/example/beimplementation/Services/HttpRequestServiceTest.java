@@ -38,6 +38,7 @@ class HttpRequestServiceTest {
                 "https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getUltraSrtFcst?serviceKey=" + apikey + "&numOfRows=100&pageNo=1&base_date=" + ultraSrtFcstService.getLatestTime().format(DateTimeFormatter.ofPattern("yyyyMMdd")) + "&base_time=" + vilageFcstService.getLatestTime().format(DateTimeFormatter.ofPattern("HHmm")) + "&nx=55&ny=127&dataType=JSON"
         };
 
+        //엔드포인트로 예외발생없이 요청되며, json형식으로 반환되는지 확인
         for (String endPoint: endPoints) {
                 assertDoesNotThrow(() -> {
                     JSONObject jsonObject = httpRequestService.getFromAPI(endPoint);

@@ -29,6 +29,7 @@ class UltraSrtInfoControllerTest {
 
         String result = ultraSrtInfoController.getUltraSrtFcst(10, 1, baseDate, baseTime, 55, 127);
 
+        //요청시 예외발생없이 json형식으로 반환되는지 확인하고, 반환되는 자료의 개수가 메타데이터와 동일한지 확인
         assertDoesNotThrow(() -> {
             JSONObject jsonObject = new JSONObject(result);
             String resultCode = jsonObject.getJSONObject("response").getJSONObject("header").getString("resultCode");

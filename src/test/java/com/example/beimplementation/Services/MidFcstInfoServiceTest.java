@@ -20,6 +20,7 @@ class MidFcstInfoServiceTest {
     @Autowired
     private MidFcstInfoService midFcstInfoService;
 
+    //요청한 데이터가 잘 반환되는지 확인
     @Test
     void getMidLandFcst() {
         String latestTime = midFcstInfoService.getLatestUpdateTime();
@@ -32,6 +33,7 @@ class MidFcstInfoServiceTest {
 
     }
 
+    //null반환되지 않으며 예외 발생하지 않고 형변환 가능한지 확인
     @Test
     void getLatestUpdateTime() {
 

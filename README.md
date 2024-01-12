@@ -1,12 +1,18 @@
 # 기상청 예보 API 연동 프로젝트
 
 ## 목표
+* 입사지원한 회사 코딩테스트 과제
 * 서비스키와 데이터타입(JSON으로만 구현)을 제외하고 기상청 API와 동일한 API를 제공
 * 클라이언트 요청시 데이터베이스에 보유하고 있는 자료라면 기상청에 요청하지 않고 바로 전달
 * 기상청 API와 마찬가지로 여러건의 자료가 검색되는 경우에는 페이징 기능을 제공
 * 단위 테스트 기능 구현완료
 * 통합 테스트 기능(미구현)
 * Spring Rest Docs(미구현)
+
+## 기능
+* 중기 육상 예보 조회 (/midfcst/getMidLandFcst?)
+* 단기 예보 조회 (VilageFcst/getVilageFcst?)
+* 초단기 예보 조회 (UltraSrtFcst/getUltraSrtFcst?)
 
 ## 기술 스택
 * Spring Boot 2.7.18

@@ -18,6 +18,7 @@ class MidFcstInfoControllerTest {
 
         String result = midFcstInfoController.getMidLandFcst("1","1","11B00000","");
 
+        //요청시 예외발생없이 json 형태로 반환되며, 정상코드인지 확인
         assertDoesNotThrow(() -> {
             JSONObject jsonObject = new JSONObject(result);
             String resultCode = jsonObject.getJSONObject("response").getJSONObject("header").getString("resultCode");

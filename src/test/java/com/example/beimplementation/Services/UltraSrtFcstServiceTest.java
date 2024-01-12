@@ -21,6 +21,7 @@ class UltraSrtFcstServiceTest {
     @Value("${openapi.midfcst.key}")
     private String apikey;
 
+    //요청한 데이터가 잘 반환되는지 확인
     @Test
     void getUltraSrtFcst() {
 
@@ -36,6 +37,7 @@ class UltraSrtFcstServiceTest {
 
     }
 
+    //최신 기상청 발표 시각이 null이 아님을 체크하고, 날짜가 제대로 출력되는지 확인
     @Test
     void getLatestTime() {
         LocalDateTime latestTime = ultraSrtFcstService.getLatestTime();
