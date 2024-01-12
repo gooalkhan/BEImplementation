@@ -29,11 +29,11 @@ public class HttpRequestService {
             conn.setDoOutput(true);
 
             if (conn.getResponseCode() != 200) {
-                log.error("getMidFcst job failed, status code: {}", conn.getResponseCode());
+                log.error("HttpRequest job failed, status code: {}", conn.getResponseCode());
                 throw new HttpClientErrorException(HttpStatus.valueOf(conn.getResponseCode()));
 
             } else {
-                log.debug("getMidFcst connection successful, status code: {}", conn.getResponseCode());
+                log.debug("HttpRequest connection successful, status code: {}", conn.getResponseCode());
                 BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream(), StandardCharsets.UTF_8));
                 StringBuilder sb = new StringBuilder();
 

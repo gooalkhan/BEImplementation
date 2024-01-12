@@ -10,7 +10,7 @@ public class ResponseJsonBuilder {
     private JSONArray itemArray = new JSONArray();
 
     public ResponseJsonBuilder() {
-        this.setHeader("05", "FAILED_MAKING_RESPONSE");
+        this.setHeader("96", "FAILED_MAKING_RESPONSE");
         this.setBody(0,0);
     }
 
