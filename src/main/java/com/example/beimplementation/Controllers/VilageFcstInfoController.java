@@ -18,6 +18,8 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
+//단기예보 콘트롤러
+
 @Slf4j
 @RequiredArgsConstructor
 @RequestMapping("/VilageFcst")
@@ -41,10 +43,13 @@ public class VilageFcstInfoController {
         String response;
 
         if (nx == 0 || ny == 0) {
+            //필수입력값인 지역위치 미입력시 에러코드 전송
+            log.error("client gives no required parameter");
             jsonBuilder.setHeader("97", "NO_PARAMETER");
             jsonBuilder.setBody(0, 0);
             return jsonBuilder.build().toString();
         } else {
+            //필수입력값인 발표시각 미입력시 최신 시각으로 처리
             if (baseDate == 999999 || baseTime.isEmpty()) {
                 LocalDateTime latestTime = vilageFcstService.getLatestTime();
                 baseDate = Integer.parseInt(latestTime.format(DateTimeFormatter.ofPattern("yyyyMMdd")));
@@ -52,6 +57,7 @@ public class VilageFcstInfoController {
             }
 
             try {
+                //정상진행시
                 List<VilageFcst> listOfVilageFcst = vilageFcstService.getVilageFcst(
                         apikey, numOfRows, pageNo, baseDate, baseTime, nx, ny);
                 jsonBuilder.setHeader("00", "NORMAL_SERVICE");
@@ -61,16 +67,19 @@ public class VilageFcstInfoController {
                 }
 
             } catch (BadQueryException bqe) {
+                //클리라이언트 요청값이 잘못될 경우의 예외처리
                 log.error("bad query");
                 jsonBuilder.setHeader(bqe.getResultCode(), bqe.getResultMsg());
                 jsonBuilder.setBody(0, 0);
 
             } catch (HttpClientErrorException hee) {
+                //기상청 연결안될 경우 예외처리
                 log.error("cannot connect to origin - {}", hee.getStatusCode());
                 jsonBuilder.setHeader("99", "CONNECTION_ERROR");
                 jsonBuilder.setBody(0, 0);
 
             } catch (Exception e) {
+                //기타 예외처리
                 log.error(e.getMessage());
                 jsonBuilder.setHeader("98", "SERVER_ERROR");
                 jsonBuilder.setBody(0, 0);

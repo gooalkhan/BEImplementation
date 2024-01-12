@@ -12,6 +12,8 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 
+//기상청 API요청시 공통되어 http get요청을 하는 부분만 분리하여 구현
+
 @Slf4j
 @Service
 public class HttpRequestService {
@@ -42,7 +44,7 @@ public class HttpRequestService {
                 }
 
                 String responseString = sb.toString();
-                log.debug(responseString);
+                //log.debug(responseString);
 
                 return new JSONObject(responseString).getJSONObject("response");
             }

@@ -18,6 +18,8 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
+//초단기예보 콘트롤러
+
 @Slf4j
 @RequiredArgsConstructor
 @RequestMapping("/UltraSrtFcst")
@@ -41,10 +43,13 @@ public class UltraSrtInfoController {
         String response;
 
         if (nx == 0 || ny == 0) {
+            //필수입력값인 지역위치 미입력시 에러코드 리턴
+            log.error("client gives no required parameter");
             jsonBuilder.setHeader("97", "NO_PARAMETER");
             jsonBuilder.setBody(0, 0);
             return jsonBuilder.build().toString();
         } else {
+            //필수입력값인 발표시각 미입력시 자동으로 계산
             if (baseDate == 999999 || baseTime.isEmpty()) {
                 LocalDateTime latestTime = ultraSrtFcstService.getLatestTime();
                 baseDate = Integer.parseInt(latestTime.format(DateTimeFormatter.ofPattern("yyyyMMdd")));
@@ -52,6 +57,7 @@ public class UltraSrtInfoController {
             }
 
             try {
+                //정상진행시
                 List<UltraSrtFcst> listOfUltraSrtFcst = ultraSrtFcstService.getUltraSrtFcst(
                         apikey, numOfRows, pageNo, baseDate, baseTime, nx, ny);
                 jsonBuilder.setHeader("00", "NORMAL_SERVICE");
@@ -61,16 +67,19 @@ public class UltraSrtInfoController {
                 }
 
             } catch (BadQueryException bqe) {
+                //입력값에 문제발생시 예외처리
                 log.error("bad query");
                 jsonBuilder.setHeader(bqe.getResultCode(), bqe.getResultMsg());
                 jsonBuilder.setBody(0, 0);
 
             } catch (HttpClientErrorException hee) {
+                //기상청에 연결안될시 예외
                 log.error("cannot connect to origin - {}", hee.getStatusCode());
                 jsonBuilder.setHeader("99", "CONNECTION_ERROR");
                 jsonBuilder.setBody(0, 0);
 
             } catch (Exception e) {
+                //기타예외
                 log.error(e.getMessage());
                 jsonBuilder.setHeader("98", "SERVER_ERROR");
                 jsonBuilder.setBody(0, 0);

@@ -15,6 +15,7 @@ public class DatabaseConfig {
     @Value("${spring.profiles.active}")
     private String activeProfile;
 
+    //외부에서 테스트 인메모리 데이터베이스인 H2를 접근하기 위한 서버 생성, 배포모드에서는 비활성됨
     @Bean(initMethod = "start", destroyMethod = "stop")
     public Server h2Server() throws SQLException {
         if (activeProfile.equals("prod")) {

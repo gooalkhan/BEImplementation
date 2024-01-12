@@ -26,6 +26,7 @@ public class VilageFcstService {
     public List<VilageFcst> getVilageFcst(String serviceKey, int numOfRows, int pageNo, int baseDate,
                                           String baseTime, int nx, int ny) throws Exception {
         Pageable pageable = PageRequest.of(pageNo, numOfRows);
+        //기본 여러건 조회라 페이징으로 가져오는 부분 처리
 
         if (vilageFcstRepository.countByBaseDateAndBaseTimeAndNxAndNy(baseDate, baseTime, nx, ny) > 0) {
 
@@ -34,7 +35,7 @@ public class VilageFcstService {
         } else {
             String fullEndPoint = endPoint +
                     "?" + "ServiceKey=" + serviceKey +
-                    "&" + "numOfRows=" + "9999" +
+                    "&" + "numOfRows=" + "9999" + // 최대 9999개까지 가져올 수 있음, 전부 가져오고 클라리언트에는 요청한 부분만 보여줌
                     "&" + "pageNo=" + "1" +
                     "&" + "dataType=" + "JSON" +
                     "&" + "base_date=" + baseDate +
@@ -47,6 +48,8 @@ public class VilageFcstService {
             JSONObject header = jsonObject.getJSONObject("header");
 
             if (!header.getString("resultMsg").equals("NORMAL_SERVICE")) {
+                //정상적인 접근이 아닐시 예외발생
+                log.error("client gives wrong parameter");
                 throw new BadQueryException(header.getString("resultCode"), header.getString("resultMsg"));
             } else {
                 JSONObject body = jsonObject.getJSONObject("body");
@@ -74,10 +77,12 @@ public class VilageFcstService {
         }
     };
 
+    //페이징시 전체건수 대비 가져온건을 보여주기 위한 전체건수 호출 부분
     public int getCountByConditions(int baseDate, String baseTime, int nx, int ny) {
         return vilageFcstRepository.countByBaseDateAndBaseTimeAndNxAndNy(baseDate, baseTime, nx, ny);
     }
 
+    //기상청 발표시간을 자동으로 계산, API마다 발표시간이 달라 별도로 구현함
     public LocalDateTime getLatestTime() {
 
         int[] openTime = {2, 5, 8, 11, 14, 17, 20, 23};

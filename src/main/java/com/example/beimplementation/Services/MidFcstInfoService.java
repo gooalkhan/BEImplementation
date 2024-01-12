@@ -24,6 +24,7 @@ public class MidFcstInfoService {
     private final MidLandFcstRepository midLandFcstRepository;
     private final HttpRequestService httpRequestService;
 
+    //데이터베이스에 자료있으면 바로 리턴, 없으면 요청 후 데이터베이스에 저장하고 리턴
     public MidLandFcst getMidLandFcst(String serviceKey, int numOfRows, int pageNo, String regId, String tmFc) throws Exception {
         MidLandFcst midLandFcst = null;
 
@@ -33,6 +34,7 @@ public class MidFcstInfoService {
             log.error("multiple entries found");
             throw new MultipleEntryException(listOfMidLandFcst.size());
         } else if (listOfMidLandFcst.size() == 1) {
+            //동일조건이면 한개만 검색되어야함
             midLandFcst = listOfMidLandFcst.get(0);
         } else {
             log.debug("cannot find entries");
@@ -50,11 +52,13 @@ public class MidFcstInfoService {
             JSONObject header = jsonObject.getJSONObject("header");
 
             if (!header.getString("resultMsg").equals("NORMAL_SERVICE")) {
+                log.error("client gives wrong parameter");
                 throw new BadQueryException(header.getString("resultCode"), header.getString("resultMsg"));
             }
             JSONObject body = jsonObject.getJSONObject("body");
             JSONObject item = body.getJSONObject("items").getJSONArray("item").getJSONObject(0);
 
+            //json파싱 후 엔티티 객체 생성
             midLandFcst = new MidLandFcst();
             midLandFcst.setRegId(item.getString("regId"));
             midLandFcst.setTmFc(tmFc);
@@ -97,6 +101,7 @@ public class MidFcstInfoService {
         return midLandFcst;
     }
 
+    // 기상청 API 발표 시간을 구해주는 부분, API마다 발표시간이 달라 분리하여 구현
     public String getLatestUpdateTime() {
         LocalDateTime result;
 

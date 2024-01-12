@@ -26,6 +26,7 @@ public class UltraSrtFcstService {
     public List<UltraSrtFcst> getUltraSrtFcst(String serviceKey, int numOfRows, int pageNo, int baseDate,
                                               String baseTime, int nx, int ny) throws Exception {
         Pageable pageable = PageRequest.of(pageNo, numOfRows);
+        //기본 다중조회라 페이징으로 검색가능
 
         if (ultraSrtFcstRepository.countByBaseDateAndBaseTimeAndNxAndNy(baseDate, baseTime, nx, ny) > 0) {
 
@@ -34,7 +35,7 @@ public class UltraSrtFcstService {
         } else {
             String fullEndPoint = endPoint +
                     "?" + "ServiceKey=" + serviceKey +
-                    "&" + "numOfRows=" + "9999" +
+                    "&" + "numOfRows=" + "9999" + //최대 가져올 수 있는 건수가 9999건, 모두 가져와서 일부만 페이징으로 리턴
                     "&" + "pageNo=" + "1" +
                     "&" + "dataType=" + "JSON" +
                     "&" + "base_date=" + baseDate +
@@ -47,6 +48,7 @@ public class UltraSrtFcstService {
             JSONObject header = jsonObject.getJSONObject("header");
 
             if (!header.getString("resultMsg").equals("NORMAL_SERVICE")) {
+                log.error("client gives wrong parameter");
                 throw new BadQueryException(header.getString("resultCode"), header.getString("resultMsg"));
             } else {
                 JSONObject body = jsonObject.getJSONObject("body");
@@ -75,10 +77,12 @@ public class UltraSrtFcstService {
         }
     };
 
+    //페이징을 하면 갖고온 건수 대비 전체건수를 보여주기 위해 전체건수 가져오는 부분
     public int getCountByConditions(int baseDate, String baseTime, int nx, int ny) {
         return ultraSrtFcstRepository.countByBaseDateAndBaseTimeAndNxAndNy(baseDate, baseTime, nx, ny);
     }
 
+    //기상청 발표시간 자동생성, API마다 발표시간이 달라 별도로 구현
     public LocalDateTime getLatestTime() {
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime readyTime = now.withMinute(46);
